@@ -8,27 +8,10 @@ terraform {
     key    = "global/s3/terraform.tfstate"
     region = "ap-northeast-1"
 
-    dynamodb_table = "sunaga-terrafrom-up-and-running-locks"
+    dynamodb_table = "sunaga-terraform-up-and-running-locks"
     encrypt        = true
   }
 }
-
-# resource "aws_vpc" "example_vpc" {
-#   cidr_block = "10.0.0.0/16"
-#
-#   tags = {
-#     Name = "sunaga"
-#   }
-# }
-#
-# resource "aws_subnet" "example_subnet" {
-#   vpc_id     = aws_vpc.example_vpc.id
-#   cidr_block = "10.0.0.0/24"
-#
-#   tags = {
-#     Name = "sunaga"
-#   }
-# }
 
 data "aws_vpc" "default" {
   default = true
@@ -43,7 +26,6 @@ data "aws_subnets" "default" {
 
 resource "aws_security_group" "sg_instance" {
   name = "sunaga-example-instance"
-  # vpc_id = aws_vpc.example_vpc.id
 
   ingress {
     from_port   = var.server_port
@@ -53,15 +35,10 @@ resource "aws_security_group" "sg_instance" {
   }
 }
 
-# resource "aws_instance" "example" {
 resource "aws_launch_configuration" "example" {
-  # ami           = "ami-0f415cc2783de6675" # for aws_instance
-  image_id      = "ami-0f415cc2783de6675"
-  instance_type = "t2.micro"
-  # subnet_id                   = aws_subnet.example_subnet.id # for aws_instance
-  # vpc_security_group_ids = [aws_security_group.sg_instance.id] # for aws_instance
+  image_id        = "ami-0f415cc2783de6675"
+  instance_type   = "t2.micro"
   security_groups = [aws_security_group.sg_instance.id]
-  # associate_public_ip_address = true # for aws_instance
 
   user_data = <<-EOF
   #!/bin/bash
@@ -72,24 +49,7 @@ resource "aws_launch_configuration" "example" {
   lifecycle {
     create_before_destroy = true
   }
-
-  # user_data_replace_on_change = true # for aws_instance
-
-  # tags = { # for aws_instance
-  #   Name = "sunaga-example"
   # }
-}
-
-# for aws_instance
-# output "instance_public_ip" {
-#   value       = aws_instance.example.public_ip
-#   description = "The public ip address the web server"
-# }
-
-variable "server_port" {
-  description = "The port the server will use for HTTP requests"
-  type        = number
-  default     = 8080
 }
 
 resource "aws_autoscaling_group" "example" {
@@ -183,7 +143,3 @@ resource "aws_lb_target_group" "asg" {
   }
 }
 
-output "alb_dns_name" {
-  value       = aws_lb.example.dns_name
-  description = "The domain name of the load balancer"
-}

@@ -5,8 +5,12 @@ provider "aws" {
 resource "aws_s3_bucket" "terraform_state" {
   bucket = "sunaga-terraform-up-and-running-state"
   lifecycle {
+    # 削除時には無効化する
     prevent_destroy = true
   }
+
+  # バージョン管理が有効なリソース削除時に必要
+  # force_destroy =true
 }
 
 resource "aws_s3_bucket_versioning" "enabled" {

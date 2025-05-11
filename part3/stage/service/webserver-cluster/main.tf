@@ -40,16 +40,15 @@ resource "aws_launch_configuration" "example" {
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.sg_instance.id]
 
-  user_data = <<-EOF
-  #!/bin/bash
-  echo "hello world" > index.html
-  nohup busybox httpd -f -p ${var.server_port} &
-  EOF
+  user_data = templatefile("./user-data.sh", {
+    server_port = var.server_port
+    db_address  = data.terraform_remote_state.db.outputs.address
+    db_port     = data.terraform_remote_state.db.outputs.port
+  })
 
   lifecycle {
     create_before_destroy = true
   }
-  # }
 }
 
 resource "aws_autoscaling_group" "example" {
@@ -143,3 +142,13 @@ resource "aws_lb_target_group" "asg" {
   }
 }
 
+
+data "terraform_remote_state" "db" {
+  backend = "s3"
+
+  config = {
+    bucket = "sunaga-terraform-up-and-running-state"
+    key    = "stage/data-stores/mysql/terraform.tfstate"
+    region = "ap-northeast-1"
+  }
+}
